@@ -1,0 +1,15 @@
+date,description,amount,type,category,payment_mode
+2024-01-01,Monthly Salary,55000,income,Salary,bank_transfer
+2024-01-03,Grocery Shopping,2200,expense,Food & Dining,upi
+2024-01-05,Metro Card Recharge,500,expense,Transportation,upi
+2024-01-07,Netflix Subscription,649,expense,Subscriptions,card
+2024-01-10,Freelance Project,8000,income,Freelance,bank_transfer
+2024-01-12,Restaurant Dinner,1400,expense,Food & Dining,card
+2024-01-14,Electricity Bill,1350,expense,Utilities,upi
+2024-01-15,Shopping - Clothes,3200,expense,Shopping,card
+2024-01-17,Gym Membership,999,expense,Personal Care,upi
+2024-01-20,Online Course,2999,expense,Education,card
+2024-01-22,Cab Rides,850,expense,Transportation,upi
+2024-01-25,Movie Tickets,700,expense,Entertainment,card
+2024-01-28,Medical Checkup,500,expense,Healthcare,cash
+2024-01-30,House Rent,12000,expense,Rent,bank_transfer
