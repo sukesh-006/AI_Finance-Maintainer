@@ -8,7 +8,9 @@ from datetime import datetime
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.models.finance import Transaction, Category, TransactionType, PaymentMode, CSVUploadHistory
+from app.models.finance import (
+    Transaction, Category, TransactionType, PaymentMode, CSVUploadHistory
+)
 
 router = APIRouter()
 
@@ -48,7 +50,9 @@ async def import_csv(
     for i, row in enumerate(reader, 1):
         try:
             # Expected columns: date, description, amount, type, category, payment_mode
-            tx_date = datetime.strptime(row.get("date", "").strip(), "%Y-%m-%d").date()
+            tx_date = datetime.strptime(
+                row.get("date", "").strip(), "%Y-%m-%d"
+            ).date()
             amount = float(row.get("amount", "0").strip())
             tx_type = row.get("type", "expense").strip().lower()
             category_name = row.get("category", "other expense").strip().lower()
@@ -66,10 +70,14 @@ async def import_csv(
                         break
             if not category:
                 # Fall back to "Other Expense" or "Other Income"
-                fallback = "other expense" if tx_type == "expense" else "other income"
+                fallback = (
+                    "other expense" if tx_type == "expense" else "other income"
+                )
                 category = categories.get(fallback) or list(categories.values())[0]
 
-            payment_mode_str = row.get("payment_mode", "upi").strip().lower().replace(" ", "_")
+            payment_mode_str = (
+                row.get("payment_mode", "upi").strip().lower().replace(" ", "_")
+            )
             try:
                 payment_mode = PaymentMode(payment_mode_str)
             except ValueError:
@@ -79,7 +87,11 @@ async def import_csv(
                 user_id=current_user.id,
                 category_id=category.id,
                 amount=amount,
-                type=TransactionType(tx_type) if tx_type in ("income", "expense") else TransactionType.expense,
+                type=(
+                    TransactionType(tx_type)
+                    if tx_type in ("income", "expense")
+                    else TransactionType.expense
+                ),
                 description=row.get("description", "").strip()[:500] or None,
                 payment_mode=payment_mode,
                 date=tx_date,
@@ -124,11 +136,37 @@ async def upload_history(
 async def download_template():
     """Return CSV template format"""
     return {
-        "columns": ["date", "description", "amount", "type", "category", "payment_mode"],
-        "example_rows": [
-            {"date": "2024-01-15", "description": "Monthly salary", "amount": "50000", "type": "income", "category": "Salary", "payment_mode": "bank_transfer"},
-            {"date": "2024-01-16", "description": "Grocery shopping", "amount": "2500", "type": "expense", "category": "Food & Dining", "payment_mode": "upi"},
-            {"date": "2024-01-17", "description": "Movie ticket", "amount": "350", "type": "expense", "category": "Entertainment", "payment_mode": "card"},
+        "columns": [
+            "date", "description", "amount", "type", "category", "payment_mode"
         ],
-        "notes": "Date format: YYYY-MM-DD | Types: income / expense | Payment modes: cash, upi, card, bank_transfer, other",
+        "example_rows": [
+            {
+                "date": "2024-01-15",
+                "description": "Monthly salary",
+                "amount": "50000",
+                "type": "income",
+                "category": "Salary",
+                "payment_mode": "bank_transfer",
+            },
+            {
+                "date": "2024-01-16",
+                "description": "Grocery shopping",
+                "amount": "2500",
+                "type": "expense",
+                "category": "Food & Dining",
+                "payment_mode": "upi",
+            },
+            {
+                "date": "2024-01-17",
+                "description": "Movie ticket",
+                "amount": "350",
+                "type": "expense",
+                "category": "Entertainment",
+                "payment_mode": "card",
+            },
+        ],
+        "notes": (
+            "Date format: YYYY-MM-DD | Types: income / expense | "
+            "Payment modes: cash, upi, card, bank_transfer, other"
+        ),
     }
