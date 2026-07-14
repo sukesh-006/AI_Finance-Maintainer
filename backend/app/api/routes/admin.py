@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 
@@ -15,14 +15,26 @@ async def admin_stats(
     admin: User = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    total_users = (await db.execute(select(func.count()).select_from(User))).scalar()
-    active_users = (await db.execute(select(func.count()).select_from(User).where(User.is_active == True))).scalar()
-    total_transactions = (await db.execute(select(func.count()).select_from(Transaction))).scalar()
+    total_users = (
+        await db.execute(select(func.count()).select_from(User))
+    ).scalar()
+    active_users = (
+        await db.execute(
+            select(func.count()).select_from(User).where(User.is_active == True)
+        )
+    ).scalar()
+    total_transactions = (
+        await db.execute(select(func.count()).select_from(Transaction))
+    ).scalar()
     total_income = (await db.execute(
-        select(func.sum(Transaction.amount)).where(Transaction.type == TransactionType.income)
+        select(func.sum(Transaction.amount)).where(
+            Transaction.type == TransactionType.income
+        )
     )).scalar() or 0
     total_expense = (await db.execute(
-        select(func.sum(Transaction.amount)).where(Transaction.type == TransactionType.expense)
+        select(func.sum(Transaction.amount)).where(
+            Transaction.type == TransactionType.expense
+        )
     )).scalar() or 0
 
     return {
@@ -65,7 +77,6 @@ async def toggle_user(
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
     if not user:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="User not found")
     user.is_active = not user.is_active
     await db.commit()
