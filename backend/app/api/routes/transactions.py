@@ -11,7 +11,8 @@ from app.core.security import get_current_user
 from app.models.user import User
 from app.models.finance import Transaction, Category, TransactionType
 from app.schemas.schemas import (
-    TransactionCreate, TransactionUpdate, TransactionOut, TransactionListResponse, CategoryOut
+    TransactionCreate, TransactionUpdate, TransactionOut,
+    TransactionListResponse, CategoryOut
 )
 
 router = APIRouter()
@@ -85,7 +86,10 @@ async def create_transaction(
 ):
     # Verify category belongs to user
     cat = await db.execute(
-        select(Category).where(Category.id == data.category_id, Category.user_id == current_user.id)
+        select(Category).where(
+            Category.id == data.category_id,
+            Category.user_id == current_user.id
+        )
     )
     if not cat.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Category not found")
@@ -95,7 +99,9 @@ async def create_transaction(
     await db.commit()
 
     result = await db.execute(
-        select(Transaction).options(selectinload(Transaction.category)).where(Transaction.id == transaction.id)
+        select(Transaction)
+        .options(selectinload(Transaction.category))
+        .where(Transaction.id == transaction.id)
     )
     return TransactionOut.model_validate(result.scalar_one())
 
@@ -147,7 +153,10 @@ async def delete_transaction(
     db: AsyncSession = Depends(get_db),
 ):
     result = await db.execute(
-        select(Transaction).where(Transaction.id == transaction_id, Transaction.user_id == current_user.id)
+        select(Transaction).where(
+            Transaction.id == transaction_id,
+            Transaction.user_id == current_user.id
+        )
     )
     t = result.scalar_one_or_none()
     if not t:
