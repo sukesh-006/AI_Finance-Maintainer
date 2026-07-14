@@ -77,14 +77,19 @@ async def create_budget(
         )
     )
     if existing.scalar_one_or_none():
-        raise HTTPException(status_code=400, detail="Budget already exists for this category and month")
+        raise HTTPException(
+            status_code=400,
+            detail="Budget already exists for this category and month"
+        )
 
     budget = Budget(**data.model_dump(), user_id=current_user.id)
     db.add(budget)
     await db.commit()
 
     result = await db.execute(
-        select(Budget).options(selectinload(Budget.category)).where(Budget.id == budget.id)
+        select(Budget)
+        .options(selectinload(Budget.category))
+        .where(Budget.id == budget.id)
     )
     b = result.scalar_one()
     return await enrich_budget(b, db)
