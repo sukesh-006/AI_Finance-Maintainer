@@ -1,6 +1,6 @@
 from sqlalchemy import (
     Column, Integer, String, Float, Boolean, DateTime,
-    Text, ForeignKey, Enum, Date
+    ForeignKey, Enum, Date
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -47,7 +47,7 @@ class Transaction(Base):
     description = Column(String(500), nullable=True)
     payment_mode = Column(Enum(PaymentMode), default=PaymentMode.upi)
     date = Column(Date, nullable=False)
-    notes = Column(Text, nullable=True)
+    notes = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
@@ -82,7 +82,7 @@ class SavingsGoal(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     title = Column(String(200), nullable=False)
-    description = Column(Text, nullable=True)
+    description = Column(String, nullable=True)
     target_amount = Column(Float, nullable=False)
     current_amount = Column(Float, default=0.0)
     target_date = Column(Date, nullable=False)
@@ -101,7 +101,7 @@ class AIRecommendation(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     type = Column(String(50), nullable=False)  # spending, savings, goal, general
     title = Column(String(300), nullable=False)
-    message = Column(Text, nullable=False)
+    message = Column(String, nullable=False)
     priority = Column(String(20), default="medium")  # low, medium, high
     is_read = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -128,7 +128,7 @@ class ChatMessage(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     role = Column(String(20), nullable=False)  # user, assistant
-    content = Column(Text, nullable=False)
+    content = Column(String, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="chat_messages")
@@ -143,7 +143,7 @@ class CSVUploadHistory(Base):
     rows_imported = Column(Integer, default=0)
     rows_failed = Column(Integer, default=0)
     status = Column(String(50), default="pending")  # pending, success, failed
-    error_log = Column(Text, nullable=True)
+    error_log = Column(String, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="csv_uploads")
