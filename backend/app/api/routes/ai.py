@@ -69,10 +69,15 @@ async def generate_recommendations(user: User, db: AsyncSession) -> List[dict]:
         savings = avg_monthly_income - (current_expense or avg_monthly_income * 0.7)
         savings_rate = (savings / avg_monthly_income) * 100
         if savings_rate < 20:
+            reduction_needed = max(0, avg_monthly_income * 0.2 - savings)
             recs.append({
                 "type": "savings",
                 "title": "Boost your savings rate",
-                "message": f"You're saving {savings_rate:.0f}% of your income. Financial experts recommend saving at least 20%. Try to reduce expenses by ₹{max(0, avg_monthly_income * 0.2 - savings):.0f} this month.",
+                "message": (
+                    f"You're saving {savings_rate:.0f}% of your income. "
+                    f"Financial experts recommend saving at least 20%. "
+                    f"Try to reduce expenses by ₹{reduction_needed:.0f}."
+                ),
                 "priority": "high",
             })
 
@@ -82,10 +87,15 @@ async def generate_recommendations(user: User, db: AsyncSession) -> List[dict]:
         top_amount = cat_spend[top_cat]
         avg_top = top_amount / 3
         if avg_top > (avg_monthly_income * 0.25):
+            pct = (avg_top / avg_monthly_income * 100) if avg_monthly_income else 0
             recs.append({
                 "type": "spending",
                 "title": f"High spending on {top_cat}",
-                "message": f"You spend an average of ₹{avg_top:.0f}/month on {top_cat}, which is {(avg_top/avg_monthly_income*100):.0f}% of your income. Consider reducing it by 10-15%.",
+                "message": (
+                    f"You spend an average of ₹{avg_top:.0f}/month on {top_cat}, "
+                    f"which is {pct:.0f}% of your income. "
+                    f"Consider reducing it by 10-15%."
+                ),
                 "priority": "medium",
             })
 
@@ -102,7 +112,11 @@ async def generate_recommendations(user: User, db: AsyncSession) -> List[dict]:
         recs.append({
             "type": "general",
             "title": "Set up monthly budgets",
-            "message": "You haven't set any budgets for this month. Creating category-wise budgets helps you stay on track and avoid overspending.",
+            "message": (
+                "You haven't set any budgets for this month. "
+                "Creating category-wise budgets helps you stay on track "
+                "and avoid overspending."
+            ),
             "priority": "medium",
         })
 
@@ -110,7 +124,12 @@ async def generate_recommendations(user: User, db: AsyncSession) -> List[dict]:
     recs.append({
         "type": "savings",
         "title": "Build your emergency fund",
-        "message": f"Keep 3-6 months of expenses (₹{current_expense * 3:.0f} - ₹{current_expense * 6:.0f}) in a liquid savings account. This protects you from unexpected events.",
+        "message": (
+            f"Keep 3-6 months of expenses "
+            f"(₹{current_expense * 3:.0f} - ₹{current_expense * 6:.0f}) "
+            f"in a liquid savings account. "
+            f"This protects you from unexpected events."
+        ),
         "priority": "low",
     })
 
@@ -126,14 +145,25 @@ async def generate_recommendations(user: User, db: AsyncSession) -> List[dict]:
         remaining = goal.target_amount - goal.current_amount
         today = date.today()
         months_left = max(
-            (goal.target_date.year - today.year) * 12 + (goal.target_date.month - today.month), 1
+            (goal.target_date.year - today.year) * 12
+            + (goal.target_date.month - today.month),
+            1,
         )
         needed = remaining / months_left
         if needed > avg_monthly_income * 0.3:
+            pct = (
+                (needed / avg_monthly_income * 100)
+                if avg_monthly_income
+                else 0
+            )
             recs.append({
                 "type": "goal",
                 "title": f"Goal '{goal.title}' needs attention",
-                "message": f"You need to save ₹{needed:.0f}/month to reach '{goal.title}' by {goal.target_date.strftime('%b %Y')}. This is {(needed/avg_monthly_income*100) if avg_monthly_income else 0:.0f}% of your income — consider extending the deadline or increasing savings.",
+                "message": (
+                    f"You need to save ₹{needed:.0f}/month to reach "
+                    f"'{goal.title}' by {goal.target_date.strftime('%b %Y')}. "
+                    f"This is {pct:.0f}% of your monthly income."
+                ),
                 "priority": "high",
             })
 
@@ -210,14 +240,20 @@ def rule_based_chat(message: str, context: dict) -> str:
         if income > 0:
             rate = (savings / income) * 100
             return (
-                f"Based on this month's data, you're saving ₹{savings:.0f} ({rate:.0f}% of income). "
-                f"The 50/30/20 rule suggests: 50% needs (₹{income*0.5:.0f}), "
-                f"30% wants (₹{income*0.3:.0f}), 20% savings (₹{income*0.2:.0f}). "
-                f"Try to automate savings by transferring money at the start of each month."
+                f"Based on this month's data, you're saving ₹{savings:.0f} "
+                f"({rate:.0f}% of income). "
+                f"The 50/30/20 rule suggests: 50% needs (₹{income * 0.5:.0f}), "
+                f"30% wants (₹{income * 0.3:.0f}), 20% savings (₹{income * 0.2:.0f}). "
+                f"Try to automate savings by transferring money at the start "
+                f"of each month."
             )
-        return "Add your income transactions first so I can calculate your savings rate and give personalized advice."
+        return (
+            "Add your income transactions first so I can calculate "
+            "your savings rate and give personalized advice."
+        )
 
-    if any(kw in msg for kw in ["overspend", "spend too much", "reduce expense", "cut"]):
+    if any(kw in msg for kw in ["overspend", "spend too much",
+                                   "reduce expense", "cut"]):
         return (
             f"You're spending ₹{expense:.0f} this month. To reduce expenses: "
             f"1) Track every purchase — awareness alone cuts spending by 15%. "
@@ -236,34 +272,42 @@ def rule_based_chat(message: str, context: dict) -> str:
             "Go to the Budgets page to set category-wise limits."
         )
 
-    if any(kw in msg for kw in ["goal", "target", "achieve", "phone", "laptop", "travel", "months"]):
+    if any(kw in msg for kw in ["goal", "target", "achieve",
+                                  "phone", "laptop", "travel", "months"]):
         return (
-            "To check if a goal is achievable, go to the Goals page and set your target amount and date. "
+            "To check if a goal is achievable, go to the Goals page "
+            "and set your target amount and date. "
             "The app will calculate how much you need to save each month. "
             f"Currently you save ₹{savings:.0f}/month. "
-            "If that's not enough, either increase income, reduce expenses, or extend the deadline."
+            "If that's not enough, either increase income, reduce expenses, "
+            "or extend the deadline."
         )
 
-    if any(kw in msg for kw in ["invest", "investment", "mutual fund", "stock", "fd"]):
+    if any(kw in msg for kw in ["invest", "investment",
+                                  "mutual fund", "stock", "fd"]):
         return (
             "Once you have 3-6 months of emergency fund, consider investing: "
             "1) SIP in index funds for long-term goals (5+ years). "
             "2) FD or RD for short-term goals (1-3 years). "
             "3) PPF for tax savings. "
-            "Start small — even ₹500/month grows significantly over time with compounding."
+            "Start small — even ₹500/month grows significantly "
+            "over time with compounding."
         )
 
     if any(kw in msg for kw in ["emergency", "fund"]):
         return (
             f"An emergency fund should cover 3-6 months of expenses. "
-            f"Based on your spending, that's ₹{expense*3:.0f} - ₹{expense*6:.0f}. "
-            "Keep it in a high-interest savings account or liquid mutual fund for quick access."
+            f"Based on your spending, that's ₹{expense * 3:.0f} "
+            f"- ₹{expense * 6:.0f}. "
+            "Keep it in a high-interest savings account or liquid "
+            "mutual fund for quick access."
         )
 
     return (
-        "I can help with questions about saving money, budgeting, spending habits, "
-        "financial goals, and investments. Try asking: "
-        "'How much should I save?', 'Why am I overspending?', or 'Can I reach my goal in 6 months?'"
+        "I can help with questions about saving money, budgeting, "
+        "spending habits, financial goals, and investments. Try asking: "
+        "'How much should I save?', 'Why am I overspending?', or "
+        "'Can I reach my goal in 6 months?'"
     )
 
 
@@ -294,15 +338,21 @@ async def chat(
     )
 
     context = {
-        "monthly_income": income_result.scalar() or current_user.monthly_income or 0,
+        "monthly_income": income_result.scalar()
+        or current_user.monthly_income
+        or 0,
         "monthly_expense": expense_result.scalar() or 0,
     }
 
     reply = rule_based_chat(request.message, context)
 
     # Save both messages
-    user_msg = ChatMessage(user_id=current_user.id, role="user", content=request.message)
-    bot_msg = ChatMessage(user_id=current_user.id, role="assistant", content=reply)
+    user_msg = ChatMessage(
+        user_id=current_user.id, role="user", content=request.message
+    )
+    bot_msg = ChatMessage(
+        user_id=current_user.id, role="assistant", content=reply
+    )
     db.add(user_msg)
     db.add(bot_msg)
     await db.commit()
