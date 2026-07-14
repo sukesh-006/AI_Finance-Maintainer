@@ -8,13 +8,18 @@ from typing import List
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.models.finance import Transaction, Budget, SavingsGoal, AIRecommendation, TransactionType, Category, GoalStatus
+from app.models.finance import (
+    Transaction, Budget, SavingsGoal, AIRecommendation,
+    TransactionType, Category, GoalStatus
+)
 from app.schemas.schemas import DashboardSummary, MonthlyStat, CategoryStat
 
 router = APIRouter()
 
-MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
-               "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+MONTH_NAMES = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
 
 
 @router.get("/dashboard", response_model=DashboardSummary)
@@ -35,17 +40,23 @@ async def dashboard(
     ]
 
     income_result = await db.execute(
-        select(func.sum(Transaction.amount)).where(and_(*filters, Transaction.type == TransactionType.income))
+        select(func.sum(Transaction.amount)).where(
+            and_(*filters, Transaction.type == TransactionType.income)
+        )
     )
     total_income = income_result.scalar() or 0.0
 
     expense_result = await db.execute(
-        select(func.sum(Transaction.amount)).where(and_(*filters, Transaction.type == TransactionType.expense))
+        select(func.sum(Transaction.amount)).where(
+            and_(*filters, Transaction.type == TransactionType.expense)
+        )
     )
     total_expense = expense_result.scalar() or 0.0
 
     net_savings = total_income - total_expense
-    savings_rate = round((net_savings / total_income) * 100, 1) if total_income > 0 else 0
+    savings_rate = (
+        round((net_savings / total_income) * 100, 1) if total_income > 0 else 0
+    )
 
     # Budget usage
     budget_result = await db.execute(
@@ -56,7 +67,9 @@ async def dashboard(
         )
     )
     total_budget = budget_result.scalar() or 0.0
-    budget_used_pct = round((total_expense / total_budget) * 100, 1) if total_budget > 0 else 0
+    budget_used_pct = (
+        round((total_expense / total_budget) * 100, 1) if total_budget > 0 else 0
+    )
 
     # Active goals
     goals_result = await db.execute(
@@ -107,11 +120,15 @@ async def monthly_trend(
         ]
 
         income = (await db.execute(
-            select(func.sum(Transaction.amount)).where(and_(*filters, Transaction.type == TransactionType.income))
+            select(func.sum(Transaction.amount)).where(
+                and_(*filters, Transaction.type == TransactionType.income)
+            )
         )).scalar() or 0.0
 
         expense = (await db.execute(
-            select(func.sum(Transaction.amount)).where(and_(*filters, Transaction.type == TransactionType.expense))
+            select(func.sum(Transaction.amount)).where(
+                and_(*filters, Transaction.type == TransactionType.expense)
+            )
         )).scalar() or 0.0
 
         stats.append(MonthlyStat(
@@ -137,7 +154,10 @@ async def category_breakdown(
     year = year or now.year
 
     result = await db.execute(
-        select(Category.name, Category.color, Category.icon, func.sum(Transaction.amount).label("total"))
+        select(
+            Category.name, Category.color, Category.icon,
+            func.sum(Transaction.amount).label("total")
+        )
         .join(Transaction, Transaction.category_id == Category.id)
         .where(
             Transaction.user_id == current_user.id,
